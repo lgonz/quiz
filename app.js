@@ -37,6 +37,24 @@ app.use(function(req, res, next) {
 
     //Hacer visible req.session en las vistas
     res.locals.session = req.session;
+
+    next();
+});
+
+// Auto-logout
+app.use(function(req, res, next) {
+    if (req.session.user) {
+        var current_time = new Date().getTime();
+        console.log(current_time);
+        console.log(req.session.last_time);
+        if (req.session.last_time && current_time>req.session.last_time+2*60*1000) {
+            delete req.session.user;
+            delete req.session.last_time;
+        } else {
+            req.session.last_time = current_time;
+            console.log('--- ' + req.session.last_time);
+        }
+    }
     next();
 });
 
