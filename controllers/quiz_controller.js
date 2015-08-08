@@ -114,3 +114,62 @@ exports.destroy = function(req, res) {
 		res.redirect('/quizes');
 	}).catch(function(error){next(error)});
 };
+/*
+exports.statistics = function(req, res) {
+	var stat = {
+		numQuizes: 0,
+		numComments: 0,
+		meanComments: 0,
+		quizesComments: 0,
+		quizesNoComments: 0
+	};
+	console.log('--------------------LETS GO');
+	models.Quiz.count()
+	.then(function (numQuizes) { // número de preguntas
+	stat.numQuizes = numQuizes;
+	console.log('NUM QUIZES: ' + stat.numQuizes);
+	return models.Comment.count();
+	})
+	.then(function (numComments) { // número de comentarios
+	stat.numComments = numComments;
+	console.log('NUM COMMENTS: ' + stat.numComments);
+	return models.Quiz.count(where);
+	})
+	.catch(function (err) {
+	errors.push(err);
+	})
+	.finally(function () {
+	//res.render('statistics/index', { stat: stat, errors: errors });
+
+	});
+};*/
+
+// GET /quizes/statistics
+exports.statistics = function(req, res) {
+	var stat = {
+		numQuizes: 0,
+		numComments: 0,
+		meanComments: 0,
+		quizesComments: 0,
+		quizesNoComments: 0
+	};
+	
+	models.Quiz.findAll({include: [{ model: models.Comment }]}).then(function(quizes) {
+			stat.numQuizes = quizes.length;
+			console.log('NUM QUIZES = ' + stat.numQuizes);
+			for (var i=0; i<quizes.length; i++) {
+				if (quizes[i].Comments.length == 0){
+					stat.quizesNoComments++;
+				} else {
+					stat.quizesComments++;
+					stat.numComments += quizes[i].Comments.length;
+				}
+			}
+			stat.meanComments = stat.numComments / stat.numQuizes;
+			console.log('NUM COMMENTS = ' + stat.numComments);
+			console.log('MEAN COMMENTS = ' + stat.meanComments);
+			console.log('QUIZES COMMENTS = ' + stat.quizesComments);
+			console.log('QUIZES NO COMMENTS = ' + stat.quizesNoComments);
+			res.render('quizes/statistics', {stat: stat, errors: []});
+		}).catch(function(error) {next(error);})
+};
